@@ -5,29 +5,19 @@
 var path = require("path");
 
 module.exports = {
-    entry: './src/Main.fs',
+    mode: "development",
+    entry: "./src/App.fs.js",
     output: {
-        path: path.join(__dirname, './dist'),
-        filename: 'bundle.js'
+        path: path.join(__dirname, "./public"),
+        filename: "bundle.js",
     },
-    mode: 'development',
     devServer: {
         static: {
-            directory: path.join(__dirname, './public')
+            directory: path.resolve(__dirname, "./public"),
+            publicPath: "/",
         },
-        port: 8080
+        port: 8080,
     },
     module: {
-        rules: [
-            {
-                test: /\.fs(x|proj)?$/,
-                use: {
-                    loader: 'fable-loader'
-                }
-            }
-        ]
-    },
-    resolve: {
-        modules: ["node_modules", "src"]
     }
-};
+}
