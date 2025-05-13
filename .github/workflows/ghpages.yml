@@ -18,7 +18,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Configure NuGet feed  # Add your GitHub Packages feed for private dependencies
+      - name: Configure NuGet feed
         run: |
           # Replace 'ihaszkaroly' with your GitHub username
           dotnet nuget add source \
@@ -28,7 +28,7 @@ jobs:
             --name weblocal \
             https://nuget.pkg.github.com/ihaszkaroly/index.json
 
-      - name: List configured NuGet sources  # Verify feed added correctly
+      - name: List configured NuGet sources
         run: dotnet nuget list source --format detailed
 
       - name: Setup .NET SDK
@@ -55,8 +55,10 @@ jobs:
   deploy:
     needs: build-and-deploy
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
     steps:
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs
+          publish_branch: gh-pages
