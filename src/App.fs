@@ -148,38 +148,70 @@ let view (model: Model) (dispatch: Msg -> unit) =
         |> List.sumBy (fun t -> t.Amount)
     let balance = totalIncome - totalExpenses
 
-    div [] [
-        h2 [] [ str "BudgetBuddy" ]
+    div [
+        Style [
+            // Container styling
+            CSSProp.MaxWidth "600px"
+            CSSProp.Margin "2rem auto"
+            CSSProp.Padding "1rem"
+            CSSProp.Border "1px solid #ccc"
+            CSSProp.BorderRadius "8px"
+            CSSProp.BoxShadow "0 2px 8px rgba(0,0,0,0.1)"
+        ]
+    ] [
+        // Title
+        h2 [ Style [ CSSProp.MarginBottom "1rem"; CSSProp.FontFamily "Arial, sans-serif" ] ] [ str "BudgetBuddy" ]
 
         // Summary statistics
-        div [ Style [ MarginBottom "1rem" ] ] [
-            span [ Style [ MarginRight "1rem" ] ] [ str (sprintf "Total Income: €%.2f" totalIncome) ]
-            span [ Style [ MarginRight "1rem" ] ] [ str (sprintf "Total Expenses: €%.2f" totalExpenses) ]
+        div [ Style [ CSSProp.MarginBottom "1.5rem"; CSSProp.Custom("display", "flex"); CSSProp.Custom("justify-content", "space-between") ] ] [
+            span [] [ str (sprintf "Total Income: €%.2f" totalIncome) ]
+            span [] [ str (sprintf "Total Expenses: €%.2f" totalExpenses) ]
             span [] [ str (sprintf "Balance: €%.2f" balance) ]
         ]
 
         // Input area
-        div [] [
-            input [ Type "text"; Placeholder "Description"; Value model.DescriptionInput; OnChange (fun e -> dispatch (UpdateDescription e.Value)) ]
-            input [ Type "number"; Placeholder "Amount"; Value model.AmountInput; OnChange (fun e -> dispatch (UpdateAmount e.Value)) ]
-            select [ Value (if model.TypeInput = Expense then "Expense" else "Income"); OnChange (fun e -> dispatch (UpdateType (if e.Value = "Expense" then Expense else Income))) ] [
-                option [ Value "Expense" ] [ str "Expense" ]
-                option [ Value "Income"  ] [ str "Income" ]
+        div [ Style [ CSSProp.Custom("display", "flex"); CSSProp.MarginBottom "1rem" ] ] [
+            input [
+                Type "text"
+                Placeholder "Description"
+                Value model.DescriptionInput
+                OnChange (fun e -> dispatch (UpdateDescription e.Value))
+                Style [ CSSProp.Padding "0.5rem"; CSSProp.MarginRight "0.5rem"; CSSProp.FlexGrow "1"; CSSProp.Border "1px solid #ccc"; CSSProp.BorderRadius "4px" ]
             ]
-            button [ OnClick (fun _ -> dispatch AddTransaction) ] [ str "Add" ]
+            input [
+                Type "number"
+                Placeholder "Amount"
+                Value model.AmountInput
+                OnChange (fun e -> dispatch (UpdateAmount e.Value))
+                Style [ CSSProp.Padding "0.5rem"; CSSProp.MarginRight "0.5rem"; CSSProp.Width "100px"; CSSProp.Border "1px solid #ccc"; CSSProp.BorderRadius "4px" ]
+            ]
+            select [
+                Value (if model.TypeInput = Expense then "Expense" else "Income")
+                OnChange (fun e -> dispatch (UpdateType (if e.Value = "Expense" then Expense else Income)))
+                Style [ CSSProp.Padding "0.5rem"; CSSProp.MarginRight "0.5rem"; CSSProp.Border "1px solid #ccc"; CSSProp.BorderRadius "4px" ]
+            ] [
+                option [ Value "Expense" ] [ str "Expense" ]
+                option [ Value "Income"  ] [ str "Income"  ]
+            ]
+            button [
+                OnClick (fun _ -> dispatch AddTransaction)
+                Style [ CSSProp.Padding "0.5rem 1rem"; CSSProp.BackgroundColor "#007bff"; CSSProp.Color "white"; CSSProp.Border "none"; CSSProp.BorderRadius "4px"; CSSProp.Cursor "pointer" ]
+            ] [ str "Add" ]
         ]
 
         // Transaction list
-        ul [] (
+        ul [ Style [ CSSProp.ListStyleType "none"; CSSProp.Padding "0" ] ] (
             model.Transactions
             |> List.map (fun tx ->
-                li [] [
-                    str (sprintf "%s - %s: %s€%.2f" (tx.Date.ToShortDateString()) tx.Description (if tx.Type = Expense then "-" else "+") tx.Amount)
-                    button [ OnClick (fun _ -> dispatch (DeleteTransaction tx.Id)) ] [ str "Delete" ]
+                li [ Style [ CSSProp.Custom("display", "flex"); CSSProp.Custom("justify-content", "space-between"); CSSProp.Custom("align-items", "center"); CSSProp.Padding "0.5rem 0"; CSSProp.BorderBottom "1px solid #eee" ] ] [
+                    span [] [ str (sprintf "%s - %s: %s€%.2f" (tx.Date.ToShortDateString()) tx.Description (if tx.Type = Expense then "-" else "+") tx.Amount) ]
+                    button [
+                        OnClick (fun _ -> dispatch (DeleteTransaction tx.Id))
+                        Style [ CSSProp.Padding "0.25rem 0.5rem"; CSSProp.BackgroundColor "#dc3545"; CSSProp.Color "white"; CSSProp.Border "none"; CSSProp.BorderRadius "4px"; CSSProp.Cursor "pointer" ]
+                    ] [ str "Delete" ]
                 ]))
     ]
 
-// Elmish startup
 Program.mkProgram init update view
 |> Program.withReactBatched "elmish-app"
 |> Program.run
