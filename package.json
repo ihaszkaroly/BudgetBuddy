@@ -4,11 +4,11 @@
   "version": "1.0.0",
   "homepage": "https://<you>.github.io/<repo>",
   "scripts": {
+     "build":   "dotnet fable src/App.fsproj --optimize --outDir build && webpack --mode production",
+    "deploy":  "gh-pages -d build -r https://$GH_TOKEN@github.com/ihaszkaroly/BudgetBuddy.git",
     "postinstall": "dotnet tool restore",
     "start": "dotnet fable watch src --run webpack-dev-server",
-    "build": "dotnet fable src/App.fsproj --optimize --outDir docs && webpack --mode production --output-path docs",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "predeploy": "npm run build"
   },
   "dependencies": {
     "react": "^18.3.1",

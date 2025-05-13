@@ -1,0 +1,62 @@
+name: Deploy to GitHub Pages
+
+# Trigger on pushes to main branch
+on:
+  push:
+    branches:
+      - main
+
+# Permissions for Pages deploy
+permissions:
+  contents: read       # for actions/checkout
+  pages: write         # for deploy step
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure NuGet feed  # Add your GitHub Packages feed for private dependencies
+        run: |
+          # Replace 'ihaszkaroly' with your GitHub username
+          dotnet nuget add source \
+            --username ihaszkaroly \
+            --password ${{ secrets.WEBSHARPER_FEED }} \
+            --store-password-in-clear-text \
+            --name weblocal \
+            https://nuget.pkg.github.com/ihaszkaroly/index.json
+
+      - name: List configured NuGet sources  # Verify feed added correctly
+        run: dotnet nuget list source --format detailed
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Build Fable + Webpack
+        run: npm run build
+
+      - name: Upload artifact for Pages
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: docs
+
+  deploy:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
