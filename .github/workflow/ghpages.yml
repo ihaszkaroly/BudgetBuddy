@@ -30,7 +30,7 @@ jobs:
       - run: npm install -g vite
       - run: dotnet build
       - run: npx vite build --outDir ../dist --base ./
-        working-directory: public/
+        working-directory: wwwroot/
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@releases/v3
