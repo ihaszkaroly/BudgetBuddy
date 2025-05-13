@@ -28,9 +28,10 @@ jobs:
             --store-password-in-clear-text
 
       - run: npm install -g vite
-      - run: |
-        cd src
-        dotnet build
+      
+      - name: Build .NET project
+        run: dotnet build src/App.fsproj --configuration Release
+
       - run: npx vite build --outDir ../dist --base ./
         working-directory: wwwroot/
 
