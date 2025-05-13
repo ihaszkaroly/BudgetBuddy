@@ -1,40 +1,39 @@
-name: Build and Deploy
+name: Deploy to GitHub Pages
+
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          persist-credentials: false 
-          submodules: true
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '7.0.x'
 
-      - name: Add GitHub registry NuGet source
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
         run: |
-          dotnet nuget add source https://nuget.pkg.github.com/dotnet-websharper/index.json \
-            --name github \
-            --username ihaszkaroly \
-            --password "${{ secrets.WEBSHARPER_FEED }}" \
-            --store-password-in-clear-text
+          npm install
+          dotnet tool restore
 
-      - run: npm install -g vite
-      - run: dotnet build
-      - run: npx vite build --outDir ../dist --base ./
-        working-directory: wwwroot/
+      - name: Build with Fable and Vite
+        run: |
+          dotnet fable src --run vite build
 
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@releases/v3
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: dist
+          personal_token: ${{ secrets.WEBSHARPER_FEED }}
+          publish_dir: ./dist
