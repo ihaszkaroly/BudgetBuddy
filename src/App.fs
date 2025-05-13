@@ -180,7 +180,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
             ]
             input [
                 Type "number"
-                Placeholder "Amount"
+                Placeholder "Amount (in €)"
                 Value model.AmountInput
                 OnChange (fun e -> dispatch (UpdateAmount e.Value))
                 Style [ CSSProp.Padding "0.5rem"; CSSProp.MarginRight "0.5rem"; CSSProp.Width "100px"; CSSProp.Border "1px solid #ccc"; CSSProp.BorderRadius "4px" ]
