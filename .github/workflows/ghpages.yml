@@ -1,15 +1,13 @@
 name: Deploy to GitHub Pages
 
-# Trigger on pushes to main branch
 on:
   push:
     branches:
       - main
 
-# Permissions for Pages deploy
 permissions:
-  contents: read       # for actions/checkout
-  pages: write         # for deploy step
+  contents: read
+  pages: write
 
 jobs:
   build-and-deploy:
@@ -17,19 +15,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Configure NuGet feed
-        run: |
-          # Replace 'ihaszkaroly' with your GitHub username
-          dotnet nuget add source \
-            --username ihaszkaroly \
-            --password ${{ secrets.WEBSHARPER_FEED }} \
-            --store-password-in-clear-text \
-            --name weblocal \
-            https://nuget.pkg.github.com/ihaszkaroly/index.json
-
-      - name: List configured NuGet sources
-        run: dotnet nuget list source --format detailed
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
