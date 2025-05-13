@@ -28,7 +28,9 @@ jobs:
             --store-password-in-clear-text
 
       - run: npm install -g vite
-      - run: dotnet build
+      - run: |
+        cd src
+        dotnet build
       - run: npx vite build --outDir ../dist --base ./
         working-directory: wwwroot/
 
