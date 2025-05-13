@@ -136,52 +136,50 @@ let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
         { model with Transactions = updated }, Cmd.none
 
 // View
-
 let view (model: Model) (dispatch: Msg -> unit) =
+    // Calculate totals
+    let totalExpenses =
+        model.Transactions
+        |> List.filter (fun t -> t.Type = Expense)
+        |> List.sumBy (fun t -> t.Amount)
+    let totalIncome =
+        model.Transactions
+        |> List.filter (fun t -> t.Type = Income)
+        |> List.sumBy (fun t -> t.Amount)
+    let balance = totalIncome - totalExpenses
+
     div [] [
         h2 [] [ str "BudgetBuddy" ]
 
+        // Summary statistics
+        div [ Style [ MarginBottom "1rem" ] ] [
+            span [ Style [ MarginRight "1rem" ] ] [ str (sprintf "Total Income: €%.2f" totalIncome) ]
+            span [ Style [ MarginRight "1rem" ] ] [ str (sprintf "Total Expenses: €%.2f" totalExpenses) ]
+            span [] [ str (sprintf "Balance: €%.2f" balance) ]
+        ]
+
+        // Input area
         div [] [
-            input [
-                Type "text"
-                Placeholder "Description"
-                Value model.DescriptionInput
-                OnChange (fun e -> dispatch (UpdateDescription e.Value))
-            ]
-            input [
-                Type "number"
-                Placeholder "Amount"
-                Value model.AmountInput
-                OnChange (fun e -> dispatch (UpdateAmount e.Value))
-            ]
-            select [
-                Value (if model.TypeInput = Expense then "Expense" else "Income")
-                OnChange (fun e ->
-                    let t = if e.Value = "Expense" then Expense else Income
-                    dispatch (UpdateType t))
-            ] [
+            input [ Type "text"; Placeholder "Description"; Value model.DescriptionInput; OnChange (fun e -> dispatch (UpdateDescription e.Value)) ]
+            input [ Type "number"; Placeholder "Amount"; Value model.AmountInput; OnChange (fun e -> dispatch (UpdateAmount e.Value)) ]
+            select [ Value (if model.TypeInput = Expense then "Expense" else "Income"); OnChange (fun e -> dispatch (UpdateType (if e.Value = "Expense" then Expense else Income))) ] [
                 option [ Value "Expense" ] [ str "Expense" ]
-                option [ Value "Income"  ] [ str "Income"  ]
+                option [ Value "Income"  ] [ str "Income" ]
             ]
             button [ OnClick (fun _ -> dispatch AddTransaction) ] [ str "Add" ]
         ]
 
+        // Transaction list
         ul [] (
             model.Transactions
             |> List.map (fun tx ->
                 li [] [
-                    str (sprintf "%s - %s: %s€%.2f"
-                        (tx.Date.ToShortDateString())
-                        tx.Description
-                        (if tx.Type = Expense then "-" else "+")
-                        tx.Amount)
+                    str (sprintf "%s - %s: %s€%.2f" (tx.Date.ToShortDateString()) tx.Description (if tx.Type = Expense then "-" else "+") tx.Amount)
                     button [ OnClick (fun _ -> dispatch (DeleteTransaction tx.Id)) ] [ str "Delete" ]
-                ])
-        )
+                ]))
     ]
 
 // Elmish startup
-
 Program.mkProgram init update view
 |> Program.withReactBatched "elmish-app"
 |> Program.run
