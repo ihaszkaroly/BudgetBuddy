@@ -1,4 +1,4 @@
-name: Build & Deploy
+name: Build & Deploy to GitHub Pages
 
 on:
   push:
@@ -6,13 +6,14 @@ on:
       - main
 
 permissions:
-  contents: read
-  pages: write
+  contents: read    # for actions/checkout
+  pages: write      # for deploying to gh-pages
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-        steps:
+
+    steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -21,7 +22,7 @@ jobs:
         with:
           dotnet-version: '7.0.x'
 
-      - name: Restore .NET tools
+      - name: Restore .NET global tools
         run: dotnet tool restore
 
       - name: Compile & bundle (Fable → Webpack)
