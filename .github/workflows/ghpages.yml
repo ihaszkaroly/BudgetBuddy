@@ -1,42 +1,56 @@
 name: Build & Deploy to GitHub Pages
+
 on:
   push:
     branches:
-      - main
+      - master    # or 'main' if that’s your default
 
 permissions:
-  contents: read
-  pages: write
+  contents: read   # for actions/checkout
+  pages: write     # to publish to gh-pages
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
 
+    steps:
+      # 1. Get your code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false
+          submodules: true
+
+      # 2. Install the .NET SDK
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '7.0.x'
+          dotnet-version: '7.0.x'  # or match your global.json
 
-      - name: Restore .NET tools
+      # 3. Restore your Fable CLI + other global tools
+      - name: Restore .NET global tools
         run: dotnet tool restore
 
+      # 4. Compile F# → JS (Fable) once
       - name: Compile Fable to JS
         run: dotnet fable src/App.fsproj --optimize --outDir src
 
+      # 5. Spin up Node (for NPM & bundler)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18.x'
 
+      # 6. Install JS deps
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Bundle with Webpack
+      # 7. Bundle with Webpack
+      - name: Build frontend with Webpack
         run: npx webpack --mode production --output-path docs
 
-      - name: Publish to gh-pages
+      # 8. Push `docs/` up to the `gh-pages` branch
+      - name: Publish to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
