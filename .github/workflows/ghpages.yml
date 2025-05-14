@@ -3,7 +3,7 @@ name: Build & Deploy to GitHub Pages
 on:
   push:
     branches:
-      - master    # or 'main' if that’s your default
+      - main    # or 'main' if that’s your default
 
 permissions:
   contents: read   # for actions/checkout
