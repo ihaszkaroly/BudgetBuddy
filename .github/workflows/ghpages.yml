@@ -1,58 +1,40 @@
-name: Build & Deploy to GitHub Pages
-
+name: Build and Deploy
 on:
+  workflow_dispatch:
   push:
     branches:
-      - main    # or 'main' if that’s your default
-
-permissions:
-  contents: read   # for actions/checkout
-  pages: write     # to publish to gh-pages
-
+      - main
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Get your code
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v2
         with:
-          persist-credentials: false
+          persist-credentials: false 
           submodules: true
 
-      # 2. Install the .NET SDK
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '7.0.x'  # or match your global.json
+          dotnet-version: '6.0.x'
 
-      # 3. Restore your Fable CLI + other global tools
-      - name: Restore .NET global tools
-        run: dotnet tool restore
+      - name: Add GitHub registry NuGet source
+        run: |
+          dotnet nuget add source https://nuget.pkg.github.com/dotnet-websharper/index.json \
+            --name github \
+            --username ihaszkaroly \
+            --password "${{ secrets.WEBSHARPER_FEED }}" \
+            --store-password-in-clear-text
 
-      # 4. Compile F# → JS (Fable) once
-      - name: Compile Fable to JS
-        run: dotnet fable src/App.fsproj --optimize --outDir src
+      - run: npm install -g vite
+      - run: dotnet build
+      - run: npx vite build --outDir ../dist --base ./
+        working-directory: public/
 
-      # 5. Spin up Node (for NPM & bundler)
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
-          node-version: '18.x'
-
-      # 6. Install JS deps
-      - name: Install npm dependencies
-        run: npm ci
-
-      # 7. Bundle with Webpack
-      - name: Build frontend with Webpack
-        run: npx webpack --mode production --output-path docs
-
-      # 8. Push `docs/` up to the `gh-pages` branch
-      - name: Publish to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: docs
-          publish_branch: gh-pages
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: dist
