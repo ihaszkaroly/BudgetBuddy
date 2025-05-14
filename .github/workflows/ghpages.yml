@@ -1,40 +1,67 @@
-name: Build and Deploy
+name: Build & Deploy to GitHub Pages
+
 on:
-  workflow_dispatch:
   push:
     branches:
-      - main
+      - main     # or 'master' if that’s your default
+
+permissions:
+  contents: read   # allows checkout
+  pages: write     # allows the deploy step
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      # 1) clone your code
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
-          persist-credentials: false 
+          persist-credentials: false
           submodules: true
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+      # 2) install the correct .NET SDK (match your global.json)
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '6.0.x'   # or '7.0.x' if you update global.json
 
-      - name: Add GitHub registry NuGet source
-        run: |
-          dotnet nuget add source https://nuget.pkg.github.com/dotnet-websharper/index.json \
-            --name github \
-            --username ihaszkaroly \
-            --password "${{ secrets.WEBSHARPER_FEED }}" \
-            --store-password-in-clear-text
+      # 3) restore any dotnet global tools (e.g. fable-compiler)
+      - name: Restore .NET tools
+        run: dotnet tool restore
 
-      - run: npm install -g vite
-      - run: dotnet build
-      - run: npx vite build --outDir ../dist --base ./
-        working-directory: public/
+      # 4) restore C# package references
+      - name: Restore .NET packages
+        run: dotnet restore src/App.fsproj
 
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@releases/v3
+      # 5) compile F# -> JavaScript once
+      - name: Compile Fable to JS
+        run: dotnet fable src/App.fsproj --optimize --outDir src
+
+      # 6) bring in Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: gh-pages
-          FOLDER: dist
+          node-version: '18.x'
+
+      # 7) install your JS dependencies
+      - name: Install npm dependencies
+        run: npm ci
+
+      # 8) bundle your frontend
+      #    - if you’re still on Webpack:
+      - name: Bundle with Webpack
+        run: npx webpack --mode production --output-path docs
+
+      #    - OR, if you’ve already switched over to Vite:
+      # - name: Bundle with Vite
+      #   run: npm run build
+
+      # 9) push the `docs/` folder up to gh-pages
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs
+          publish_branch: gh-pages
