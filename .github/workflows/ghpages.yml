@@ -6,8 +6,8 @@ on:
       - main
 
 permissions:
-  contents: read    # for actions/checkout
-  pages: write      # to allow publishing
+  contents: read
+  pages: write
 
 jobs:
   build-and-deploy:
@@ -25,12 +25,22 @@ jobs:
       - name: Restore .NET tools
         run: dotnet tool restore
 
-      - name: Compile & bundle (Fable → Webpack)
-        run: |
-          dotnet fable src/App.fsproj \
-            --optimize \
-            --outDir docs \
-            --run npx webpack --mode production --output-path docs
+      - name: Compile Fable to JS (no watch)
+        run: dotnet fable src/App.fsproj \
+               --optimize \
+               --outDir src \
+               --no-watch
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Bundle with Webpack
+        run: npx webpack --mode production --output-path docs
 
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v3
