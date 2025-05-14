@@ -12,7 +12,7 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    steps:
+        steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -24,19 +24,12 @@ jobs:
       - name: Restore .NET tools
         run: dotnet tool restore
 
-      - name: Compile Fable to JS
-        run: dotnet fable src/App.fsproj --outDir src
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18.x'
-
-      - name: Install npm dependencies
-        run: npm ci
-
-      - name: Build with Vite
-        run: npm run build    
+      - name: Compile & bundle (Fable → Webpack)
+        run: |
+          dotnet fable src/App.fsproj \
+            --optimize \
+            --outDir docs \
+            --run npx webpack --mode production --output-path docs
 
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v3
