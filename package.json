@@ -1,20 +1,18 @@
 {
   "private": true,
-  "name": "budgetbuddy",
-  "version": "1.0.0",
   "scripts": {
     "postinstall": "dotnet tool restore",
-    "start": "npm run build:js && vite", 
-    "build:js": "dotnet fable src/App.fsproj --outDir src",
-    "build": "npm run build:js && vite build",
-    "preview": "vite preview"
+    "start": "dotnet fable watch src --run webpack-dev-server",
+    "build": "dotnet fable src && webpack"
   },
+  "devDependencies": {
+    "webpack": "^5.75.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-server": "^4.11.1"
+  },
+  "version": "1.0.0",
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.4.1",
-    "vite": "^6.3.5"
   }
 }
