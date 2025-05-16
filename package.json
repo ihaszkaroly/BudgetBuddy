@@ -5,7 +5,7 @@
     "deploy": "gh-pages -d public",
     "postinstall": "dotnet tool restore",
     "start": "dotnet fable watch src --run webpack-dev-server",
-    "build": "dotnet fable src --run webpack --mode production"
+    "build": "dotnet fable src && webpack"
   },
   "devDependencies": {
     "gh-pages": "^6.3.0",
