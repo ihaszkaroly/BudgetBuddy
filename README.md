@@ -16,7 +16,7 @@ Personal finance can get messy without clear visibility. BudgetBuddy helps you:
 
 ## Screenshots
 
-![kép](https://github.com/user-attachments/assets/b57f51e1-71fc-49e7-8f0f-f7ab585b63b2)
+![kép](https://github.com/user-attachments/assets/bb2e6b10-d248-4741-8e92-81e41ceebe87)
 
 ## Getting Started
 
