@@ -123,20 +123,11 @@ let init (): Model * Cmd<Msg> =
 // Update
 let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
     match msg with
-    | UpdateDescription d ->
-        { model with DescriptionInput = d }, Cmd.none
-
-    | UpdateAmount a ->
-        { model with AmountInput = a }, Cmd.none
-
-    | UpdateType t ->
-        { model with TypeInput = t; CategoryInput = Other }, Cmd.none
-
-    | UpdateCategory c ->
-        { model with CategoryInput = c }, Cmd.none
-
-    | UpdateFilter f ->
-        { model with Filter = f }, Cmd.none
+    | UpdateDescription d -> { model with DescriptionInput = d }, Cmd.none
+    | UpdateAmount a      -> { model with AmountInput = a }, Cmd.none
+    | UpdateType t        -> { model with TypeInput = t; CategoryInput = Other }, Cmd.none
+    | UpdateCategory c    -> { model with CategoryInput = c }, Cmd.none
+    | UpdateFilter f      -> { model with Filter = f }, Cmd.none
 
     | AddTransaction ->
         match Double.TryParse model.AmountInput with
@@ -147,42 +138,33 @@ let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
                 Description = model.DescriptionInput
                 Amount      = amt
                 Type        = model.TypeInput
-                Category    =
-                    match model.TypeInput with
-                    | Income  -> Other
-                    | Expense -> model.CategoryInput
+                Category    = match model.TypeInput with Income -> Other | Expense -> model.CategoryInput
             }
             let updated = tx :: model.Transactions
             saveTransactions updated
-            { model with
-                Transactions     = updated
-                DescriptionInput = ""
-                AmountInput      = ""
-            }, Cmd.none
+            { model with Transactions = updated; DescriptionInput = ""; AmountInput = "" }, Cmd.none
         | _ ->
             model, Cmd.none
 
     | DeleteTransaction id ->
-        let updated =
-            model.Transactions
-            |> List.filter (fun t -> t.Id <> id)
+        let updated = model.Transactions |> List.filter (fun t -> t.Id <> id)
         saveTransactions updated
         { model with Transactions = updated }, Cmd.none
 
 // View
 let view (model: Model) (dispatch: Msg -> unit) =
     // Summary
-    let totalIncome =
-        model.Transactions
-        |> List.filter (fun t -> t.Type = Income)
-        |> List.sumBy (fun t -> t.Amount)
-    let totalExpenses =
-        model.Transactions
-        |> List.filter (fun t -> t.Type = Expense)
-        |> List.sumBy (fun t -> t.Amount)
+    let totalIncome = model.Transactions |> List.filter (fun t -> t.Type = Income) |> List.sumBy (fun t -> t.Amount)
+    let totalExpenses = model.Transactions |> List.filter (fun t -> t.Type = Expense) |> List.sumBy (fun t -> t.Amount)
     let balance = totalIncome - totalExpenses
 
-    // Filtered transactions
+    // Conditional color
+    let balanceColor =
+        if balance < 0.0 then "red"
+        elif balance > 100.0 then "green"
+        else "black"
+
+    // Filtered
     let displayedTxs =
         model.Transactions
         |> List.filter (fun t ->
@@ -191,8 +173,8 @@ let view (model: Model) (dispatch: Msg -> unit) =
             | IncomeFilter     -> t.Type = Income
             | CategoryFilter c -> t.Type = Expense && t.Category = c)
 
-    // Data for chart
-    let expenseCats = [ Food; Transportation; Utilities; Entertainment; Other ]
+    // Chart data
+    let expenseCats = [Food; Transportation; Utilities; Entertainment; Other]
     let totals =
         expenseCats
         |> List.map (fun c ->
@@ -201,13 +183,10 @@ let view (model: Model) (dispatch: Msg -> unit) =
                 |> List.filter (fun t -> t.Type = Expense && t.Category = c)
                 |> List.sumBy (fun t -> t.Amount)
             c, sumC)
-    let maxTotal =
-        match totals |> List.map snd with
-        | [] -> 1.0
-        | xs -> List.max xs
+    let maxTotal = match totals |> List.map snd with [] -> 1.0 | xs -> List.max xs
 
-    // Build bar elements
-    let barElements : ReactElement list =
+    // Bars
+    let barElements =
         totals
         |> List.mapi (fun _ (cat, amt) ->
             let height = if maxTotal > 0.0 then amt / maxTotal * 150.0 else 0.0
@@ -219,44 +198,47 @@ let view (model: Model) (dispatch: Msg -> unit) =
                 | Entertainment  -> "Entertainment"
                 | Other          -> "Other"
             div [ Style [
-                    CSSProp.Custom("display", "flex")
-                    CSSProp.Custom("flex-direction", "column")
-                    CSSProp.Custom("align-items", "center")
-                    CSSProp.Custom("margin-right", "20px")
+                    CSSProp.Custom("display","flex")
+                    CSSProp.Custom("flex-direction","column")
+                    CSSProp.Custom("align-items","center")
+                    CSSProp.Custom("margin-right","20px")
                   ] ] [
                 div [ Style [
-                        CSSProp.Custom("width", "60px")
+                        CSSProp.Custom("width","60px")
                         CSSProp.Custom("height", sprintf "%.0fpx" height)
-                        CSSProp.Custom("background-color", "#007bff")
+                        CSSProp.Custom("background-color","#007bff")
                       ] ] []
                 div [ Style [
-                        CSSProp.Custom("margin-top", "4px")
-                        CSSProp.Custom("font-size", "12px")
+                        CSSProp.Custom("margin-top","4px")
+                        CSSProp.Custom("font-size","12px")
                       ] ] [ str label ]
             ])
 
-    // Render
     div [] [
         // Main container
         div [ Style [
-                CSSProp.Margin "2rem auto"
-                CSSProp.Padding "1rem"
-                CSSProp.Custom("max-width", "600px")
-                CSSProp.Custom("border", "1px solid #ccc")
-                CSSProp.Custom("border-radius", "8px")
-                CSSProp.Custom("box-shadow", "0 2px 8px rgba(0,0,0,0.1)")
+                CSSProp.Custom("margin","2rem auto")
+                CSSProp.Custom("padding","1rem")
+                CSSProp.Custom("max-width","600px")
+                CSSProp.Custom("border","1px solid #ccc")
+                CSSProp.Custom("border-radius","8px")
+                CSSProp.Custom("box-shadow","0 2px 8px rgba(0,0,0,0.1)")
             ] ] [
-            h2 [ Style [ CSSProp.Custom("margin-bottom", "1rem"); CSSProp.Custom("font-family","Arial, sans-serif") ] ] [ str "BudgetBuddy" ]
+            h2 [ Style [
+                    CSSProp.Custom("margin-bottom","1rem")
+                    CSSProp.Custom("font-family","Arial, sans-serif")
+                ] ] [ str "BudgetBuddy" ]
 
-            // Stats
+            // Stats with conditional balance color
             div [ Style [
-                    CSSProp.Custom("display", "flex")
-                    CSSProp.Custom("justify-content", "space-between")
-                    CSSProp.Custom("margin-bottom", "1.5rem")
+                    CSSProp.Custom("display","flex")
+                    CSSProp.Custom("justify-content","space-between")
+                    CSSProp.Custom("margin-bottom","1.5rem")
                 ] ] [
                 span [] [ str (sprintf "Total Income: €%.2f" totalIncome) ]
                 span [] [ str (sprintf "Total Expenses: €%.2f" totalExpenses) ]
-                span [] [ str (sprintf "Balance: €%.2f" balance) ]
+                span [ Style [ CSSProp.Custom("color", balanceColor) ] ]
+                     [ str (sprintf "Balance: €%.2f" balance) ]
             ]
 
             // Input row
