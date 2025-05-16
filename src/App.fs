@@ -131,7 +131,7 @@ let update (msg: Msg) (model: Model): Model * Cmd<Msg> =
 
     | AddTransaction ->
         match Double.TryParse model.AmountInput with
-        | true, amt when not (String.IsNullOrWhiteSpace model.DescriptionInput) ->
+        | true, amt when amt >= 0.0 && not (String.IsNullOrWhiteSpace model.DescriptionInput) ->
             let tx: Transaction = {
                 Id          = Guid.NewGuid()
                 Date        = DateTime.Now
@@ -262,6 +262,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
                 ]
                 input [
                     Type "number"
+                    Min "0"
                     Placeholder "Amount (€)"
                     Value model.AmountInput
                     OnChange (fun e -> dispatch (UpdateAmount e.Value))
